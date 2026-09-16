@@ -1,0 +1,47 @@
+/* Tailwind v4 (padrão do create-next-app atual) */
+@import "tailwindcss";
+
+/* Se o seu projeto usa Tailwind v3, apague a linha acima e use estas três:
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+*/
+
+:root {
+  color-scheme: dark;
+}
+
+body {
+  font-family: var(--font-inter), system-ui, sans-serif;
+}
+
+.cinzel,
+h1,
+h2 {
+  font-family: var(--font-cinzel), Georgia, serif;
+}
+
+/* barra de rolagem discreta, combinando com o tema */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: #0a0910;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(124, 58, 237, 0.35);
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(124, 58, 237, 0.55);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
