@@ -45,3 +45,106 @@ h2 {
     transition-duration: 0.01ms !important;
   }
 }
+/* =============================================================
+   Codex — estilo do texto em Markdown
+   Cole no fim do app/globals.css
+   ============================================================= */
+
+.prose-aurhen {
+  color: rgb(221 214 254 / 0.8);
+  line-height: 1.7;
+  font-size: 0.95rem;
+}
+
+.prose-aurhen h1,
+.prose-aurhen h2,
+.prose-aurhen h3,
+.prose-aurhen h4 {
+  font-family: var(--font-cinzel), Georgia, serif;
+  color: rgb(237 233 254);
+  margin: 1.8rem 0 0.6rem;
+  line-height: 1.3;
+}
+
+.prose-aurhen h2 {
+  font-size: 1.35rem;
+  border-bottom: 1px solid rgb(124 58 237 / 0.25);
+  padding-bottom: 0.4rem;
+}
+.prose-aurhen h3 { font-size: 1.1rem; color: rgb(216 180 254); }
+.prose-aurhen h4 {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: rgb(192 132 252 / 0.8);
+}
+
+.prose-aurhen p { margin: 0.8rem 0; }
+
+.prose-aurhen strong { color: rgb(237 233 254); font-weight: 600; }
+.prose-aurhen em { color: rgb(216 180 254 / 0.9); }
+
+.prose-aurhen ul,
+.prose-aurhen ol {
+  margin: 0.8rem 0 0.8rem 1.2rem;
+  list-style: disc;
+}
+.prose-aurhen ol { list-style: decimal; }
+.prose-aurhen li { margin: 0.3rem 0; }
+
+.prose-aurhen blockquote {
+  border-left: 3px solid rgb(124 58 237 / 0.5);
+  padding: 0.2rem 0 0.2rem 1rem;
+  margin: 1rem 0;
+  font-style: italic;
+  color: rgb(196 181 253 / 0.75);
+}
+
+/* tabelas: o Codex é quase todo feito delas, então elas precisam
+   rolar sozinhas no celular em vez de esticar a página inteira */
+.prose-aurhen table {
+  display: block;
+  width: 100%;
+  overflow-x: auto;
+  border-collapse: collapse;
+  margin: 1rem 0;
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+.prose-aurhen thead th {
+  background: rgb(76 29 149 / 0.5);
+  color: rgb(237 233 254);
+  text-align: left;
+  padding: 0.5rem 0.7rem;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  border-bottom: 1px solid rgb(124 58 237 / 0.35);
+}
+
+.prose-aurhen tbody td {
+  padding: 0.45rem 0.7rem;
+  border-bottom: 1px solid rgb(124 58 237 / 0.15);
+  vertical-align: top;
+  white-space: normal;
+}
+
+.prose-aurhen tbody tr:nth-child(even) {
+  background: rgb(124 58 237 / 0.05);
+}
+
+.prose-aurhen hr {
+  border: 0;
+  border-top: 1px solid rgb(124 58 237 / 0.25);
+  margin: 2rem 0;
+}
+
+.prose-aurhen code {
+  background: rgb(0 0 0 / 0.4);
+  border: 1px solid rgb(124 58 237 / 0.2);
+  border-radius: 0.3rem;
+  padding: 0.1rem 0.35rem;
+  font-size: 0.85em;
+}
+

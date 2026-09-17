@@ -1,37 +1,58 @@
 "use client";
 
-import CharacterInventory from "@/components/inventory/CharacterInventory";
-import { useInventory } from "@/lib/hooks/useInventory";
+import { useMemo, useState } from "react";
 import type { Character, InventoryItem } from "@/lib/types";
+import { somarBonus } from "@/lib/types";
+import PainelPersonagem from "@/components/jogo/PainelPersonagem";
+import PainelEquipamento from "@/components/jogo/PainelEquipamento";
+import FichaEditavel, { type FichaCompletaDados } from "@/components/jogo/FichaEditavel";
 
 export default function FichaCliente({
   personagem,
   itensIniciais,
+  ehMestre = false,
 }: {
-  personagem: Character;
+  personagem: FichaCompletaDados;
   itensIniciais: InventoryItem[];
+  ehMestre?: boolean;
 }) {
-  const { itens, erro, equipar, desequipar, mover, limparErro } =
-    useInventory(itensIniciais);
+  const [itens, setItens] = useState(itensIniciais);
+  const bonus = useMemo(() => somarBonus(itens), [itens]);
 
   return (
-    <>
-      {erro && (
-        <div className="mb-4 flex items-start justify-between gap-4 rounded-lg border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
-          <span>{erro}</span>
-          <button onClick={limparErro} className="shrink-0 text-rose-300 hover:text-rose-100">
-            fechar
-          </button>
-        </div>
-      )}
+    <div className="mx-auto max-w-6xl p-3 md:p-6">
+      <header className="mb-4 rounded-2xl border border-violet-500/20 bg-[#120F1D]/70 px-5 py-3 backdrop-blur-xl">
+        <h1 className="cinzel text-xl tracking-wide text-violet-100">{personagem.name}</h1>
+        <p className="text-xs text-violet-300/60">
+          {personagem.race ?? "—"} · {personagem.class ?? "—"}
+          {personagem.subclass ? ` (${personagem.subclass})` : ""} · nível {personagem.level}
+        </p>
+      </header>
 
-      <CharacterInventory
-        character={personagem}
-        items={itens}
-        onEquip={equipar}
-        onUnequip={desequipar}
-        onMove={mover}
+      <div className="grid gap-4 lg:grid-cols-[15rem_1fr]">
+        <aside className="rounded-2xl border border-violet-500/20 bg-[#120F1D]/70 p-4 backdrop-blur-xl">
+          <PainelPersonagem
+            personagem={personagem as Character}
+            bonus={bonus}
+            podeEditar
+          />
+        </aside>
+
+        <section className="rounded-2xl border border-violet-500/20 bg-[#120F1D]/70 p-4 backdrop-blur-xl">
+          <PainelEquipamento
+            itensIniciais={itensIniciais}
+            ouroInicial={(personagem as { gold?: number }).gold ?? 0}
+            aoMudarBonus={setItens}
+          />
+        </section>
+      </div>
+
+      <FichaEditavel
+        personagem={personagem}
+        bonus={bonus}
+        podeEditar
+        ehMestre={ehMestre}
       />
-    </>
+    </div>
   );
 }

@@ -2,16 +2,26 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BookOpen, Dices, Map, ScrollText, Users, LogOut } from "lucide-react";
+import { BookOpen, Crown, Dices, ScrollText, Swords, LogOut } from "lucide-react";
 import { criarClienteNavegador } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 
-const LINKS = [
-  { href: "/ficha", rotulo: "Ficha", Icone: ScrollText, soMestre: false },
-  { href: "/mapa", rotulo: "Mapa", Icone: Map, soMestre: false },
-  { href: "/dados", rotulo: "Dados", Icone: Dices, soMestre: false },
-  { href: "/codex", rotulo: "Codex", Icone: BookOpen, soMestre: false },
-  { href: "/mesa", rotulo: "Mesa", Icone: Users, soMestre: true },
+/**
+ * O menu muda conforme o papel: o mestre nao tem ficha nem mesa de
+ * jogo, e o jogador nao ve o painel de controle. Em vez de esconder
+ * itens, cada papel tem a sua lista.
+ */
+const LINKS_JOGADOR = [
+  { href: "/jogo", rotulo: "Mesa de jogo", Icone: Swords },
+  { href: "/ficha", rotulo: "Ficha", Icone: ScrollText },
+  { href: "/dados", rotulo: "Dados", Icone: Dices },
+  { href: "/codex", rotulo: "Codex", Icone: BookOpen },
+];
+
+const LINKS_MESTRE = [
+  { href: "/mestre", rotulo: "Painel", Icone: Crown },
+  { href: "/dados", rotulo: "Dados", Icone: Dices },
+  { href: "/codex", rotulo: "Codex", Icone: BookOpen },
 ];
 
 export default function Navegacao({
@@ -23,7 +33,7 @@ export default function Navegacao({
 }) {
   const caminho = usePathname();
   const router = useRouter();
-  const itens = LINKS.filter((l) => !l.soMestre || ehMestre);
+  const itens = ehMestre ? LINKS_MESTRE : LINKS_JOGADOR;
 
   async function sair() {
     await criarClienteNavegador().auth.signOut();

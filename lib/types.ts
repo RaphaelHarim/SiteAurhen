@@ -6,13 +6,23 @@ export type EquipSlot =
   | "head"
   | "cloak"
   | "chest"
+  | "gloves"
   | "feet"
   | "amulet"
   | "main_hand"
   | "off_hand"
   | "ring1"
   | "ring2"
-  | "gloves";
+  | "belt"
+  | "quick1"
+  | "quick2"
+  | "quick3";
+
+/** Slots de consumo rápido, fora da armadura. */
+export const SLOTS_RAPIDOS: EquipSlot[] = ["quick1", "quick2", "quick3"];
+
+/** Tamanho da mochila. */
+export const TAMANHO_MOCHILA = 36;
 
 export type SlotType = EquipSlot | "backpack";
 
@@ -146,14 +156,29 @@ export const SLOT_LABELS: Record<EquipSlot, string> = {
   head: "Cabeça",
   cloak: "Manto",
   chest: "Peitoral",
+  gloves: "Luvas",
   feet: "Pés",
   amulet: "Amuleto",
   main_hand: "Mão principal",
   off_hand: "Mão secundária",
   ring1: "Anel",
   ring2: "Anel",
-  gloves: "Luvas",
+  belt: "Cinto",
+  quick1: "Rápido 1",
+  quick2: "Rápido 2",
+  quick3: "Rápido 3",
 };
+
+/** Item do catálogo do mestre, ainda não entregue a ninguém. */
+export interface GameItem {
+  id: string;
+  name: string;
+  description: string | null;
+  rarity: Rarity;
+  slot_type: SlotType;
+  icon_url: string | null;
+  stats_bonus: StatsBonus;
+}
 
 /** Soma os bônus de todas as peças equipadas. */
 export function somarBonus(itens: InventoryItem[]): StatsBonus {

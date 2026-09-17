@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { criarClienteServidor } from "@/lib/supabase/server";
-import type { Character, InventoryItem } from "@/lib/types";
+import type { InventoryItem } from "@/lib/types";
+import type { FichaCompletaDados } from "@/components/jogo/FichaEditavel";
 import FichaCliente from "./FichaCliente";
 import CriarPersonagem from "./CriarPersonagem";
 
@@ -14,13 +15,24 @@ export default async function Ficha() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/entrar");
 
+  const { data: perfil } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("user_id", user.id)
+    .single();
+
+  const ehMestre = perfil?.role === "mestre";
+
+  // o mestre não tem ficha própria: a casa dele é o painel
+  if (ehMestre) redirect("/mestre");
+
   const { data: personagem } = await supabase
     .from("characters")
     .select("*")
     .eq("user_id", user.id)
     .order("created_at")
     .limit(1)
-    .maybeSingle<Character>();
+    .maybeSingle<FichaCompletaDados>();
 
   if (!personagem) {
     return (
@@ -37,8 +49,10 @@ export default async function Ficha() {
     .returns<InventoryItem[]>();
 
   return (
-    <div className="mx-auto max-w-5xl p-4 md:p-8">
-      <FichaCliente personagem={personagem} itensIniciais={itens ?? []} />
-    </div>
+    <FichaCliente
+      personagem={personagem}
+      itensIniciais={itens ?? []}
+      ehMestre={ehMestre}
+    />
   );
 }

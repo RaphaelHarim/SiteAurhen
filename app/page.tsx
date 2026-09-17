@@ -16,5 +16,6 @@ export default async function Inicio() {
     .eq("user_id", user.id)
     .single();
 
-  redirect(perfil?.role === "mestre" ? "/mesa" : "/ficha");
+  // o mestre não tem ficha: a casa dele é o painel
+  redirect(perfil?.role === "mestre" ? "/mestre" : "/jogo");
 }

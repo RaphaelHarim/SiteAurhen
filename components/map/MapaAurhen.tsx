@@ -1,8 +1,8 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Eye, EyeOff, Skull, Sword, Trash2, Box, X } from "lucide-react";
+import { Eye, EyeOff, Maximize2, Minimize2, Skull, Sword, Trash2, Box, X } from "lucide-react";
 import { criarClienteNavegador } from "@/lib/supabase/client";
 import type { MapToken } from "@/lib/types";
 import { useMapaRealtime, type Mapa } from "@/lib/hooks/useMapaRealtime";
@@ -26,7 +26,37 @@ export default function MapaAurhen({
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [aberto, setAberto] = useState<MapToken | null>(null);
+  const [cheia, setCheia] = useState(false);
+
+  /**
+   * Encaixa o mapa inteiro na janela.
+   *
+   * O zoom 1 e o tamanho original da imagem, que quase nunca e o que
+   * cabe na tela. Esta conta acha a escala em que a imagem inteira
+   * entra e centraliza o que sobrar.
+   */
+  const encaixar = useCallback(() => {
+    const janela = janelaRef.current;
+    const img = imgRef.current;
+    if (!janela || !img || !img.naturalWidth) return;
+
+    const larguraBase = janela.clientWidth;             // a imagem ocupa 100% da largura
+    const alturaBase = larguraBase * (img.naturalHeight / img.naturalWidth);
+
+    const escala = Math.min(
+      janela.clientWidth / larguraBase,
+      janela.clientHeight / alturaBase
+    );
+
+    setZoom(escala);
+    setPan({
+      x: (janela.clientWidth - larguraBase * escala) / 2,
+      y: (janela.clientHeight - alturaBase * escala) / 2,
+    });
+  }, []);
   const areaRef = useRef<HTMLDivElement>(null);
+  const janelaRef = useRef<HTMLDivElement>(null);
+  const imgRef = useRef<HTMLImageElement>(null);
   const supabase = criarClienteNavegador();
 
   // arrastar o mapa e arrastar token compartilham o mesmo gesto,
@@ -40,6 +70,20 @@ export default function MapaAurhen({
   const pointers = useRef(new Map<number, { x: number; y: number }>());
 
   const visiveis = ehMestre ? tokens : tokens.filter((t) => t.is_visible);
+
+  // Esc fecha a tela cheia. Sem isso, em tela cheia sem barra do
+  // navegador, o jogador fica sem saída óbvia.
+  useEffect(() => {
+    const t = setTimeout(encaixar, 60);
+    return () => clearTimeout(t);
+  }, [cheia, mapa?.id, encaixar]);
+
+  useEffect(() => {
+    if (!cheia) return;
+    const sair = (e: KeyboardEvent) => e.key === "Escape" && setCheia(false);
+    window.addEventListener("keydown", sair);
+    return () => window.removeEventListener("keydown", sair);
+  }, [cheia]);
 
   /* ---------------- zoom e pan ---------------- */
 
@@ -135,26 +179,36 @@ export default function MapaAurhen({
 
   /* ---------------- render ---------------- */
 
+  // A barra do mestre precisa aparecer MESMO sem mapa: e por ela que
+  // o primeiro mapa entra. Antes ela ficava depois deste if, e o
+  // mestre ficava preso sem jeito de subir nada.
   if (!mapa) {
     return (
-      <div className="rounded-xl border border-violet-500/25 bg-[#120F1D]/70 p-8 text-center">
-        <p className="text-violet-200/70">Nenhum mapa ativo.</p>
-        {ehMestre && (
+      <div className="space-y-3">
+        {ehMestre && <BarraMestre mapa={null} mapas={mapas} />}
+        <div className="rounded-xl border border-dashed border-violet-500/25 bg-[#120F1D]/50 p-10 text-center">
+          <p className="text-violet-200/70">Nenhum mapa ativo.</p>
           <p className="mt-2 text-sm text-violet-300/50">
-            Suba uma imagem na barra acima para começar.
+            {ehMestre
+              ? "Arraste a imagem para a barra acima, ou use o botão Subir mapa."
+              : "O mestre ainda não colocou nenhum mapa."}
           </p>
-        )}
+        </div>
       </div>
     );
   }
 
   return (
     <div className="space-y-3">
-      {ehMestre && <BarraMestre mapa={mapa} mapas={mapas} />}
+      {ehMestre && !cheia && <BarraMestre mapa={mapa} mapas={mapas} />}
 
       <div
-        className="relative h-[72vh] w-full touch-none overflow-hidden rounded-2xl border
-                   border-violet-500/25 bg-black/60 shadow-[0_0_60px_-25px_rgba(124,58,237,.7)]"
+        ref={janelaRef}
+        className={
+          cheia
+            ? "fixed inset-0 z-40 touch-none overflow-hidden bg-[#0A0910]"
+            : "relative h-[calc(100vh-13rem)] min-h-[28rem] w-full touch-none overflow-hidden rounded-2xl border border-violet-500/25 bg-black/60 shadow-[0_0_60px_-25px_rgba(124,58,237,.7)]"
+        }
         onWheel={aoRodar}
         onPointerDown={aoPressionar}
         onPointerMove={aoMover}
@@ -172,9 +226,11 @@ export default function MapaAurhen({
           {mapa.background_url && (
             /* eslint-disable-next-line @next/next/no-img-element */
             <img
+              ref={imgRef}
               src={mapa.background_url}
               alt={mapa.name}
               draggable={false}
+              onLoad={encaixar}
               className="w-full select-none"
             />
           )}
@@ -196,7 +252,13 @@ export default function MapaAurhen({
           ))}
         </div>
 
-        <Controles zoom={zoom} setZoom={setZoom} aoCentralizar={() => setPan({ x: 0, y: 0 })} />
+        <Controles
+          zoom={zoom}
+          setZoom={setZoom}
+          aoCentralizar={encaixar}
+          cheia={cheia}
+          aoAlternarCheia={() => setCheia(!cheia)}
+        />
       </div>
 
       <AnimatePresence>
@@ -296,17 +358,35 @@ function Controles({
   zoom,
   setZoom,
   aoCentralizar,
+  cheia,
+  aoAlternarCheia,
 }: {
   zoom: number;
   setZoom: (f: (z: number) => number) => void;
   aoCentralizar: () => void;
+  cheia: boolean;
+  aoAlternarCheia: () => void;
 }) {
   return (
-    <div className="absolute bottom-3 right-3 flex items-center gap-1 rounded-xl border border-violet-500/25 bg-black/70 p-1 backdrop-blur">
+    <div className="absolute bottom-3 right-3 z-50 flex items-center gap-1 rounded-xl border border-violet-500/25 bg-black/80 p-1 backdrop-blur">
       <Botao onClick={() => setZoom((z) => Math.max(MIN_ZOOM, z * 0.85))}>−</Botao>
       <span className="w-12 text-center text-xs text-violet-200/70">{Math.round(zoom * 100)}%</span>
       <Botao onClick={() => setZoom((z) => Math.min(MAX_ZOOM, z * 1.18))}>+</Botao>
-      <Botao onClick={aoCentralizar}>⌖</Botao>
+      <button
+        onClick={aoCentralizar}
+        className="h-8 rounded-lg px-2 text-xs text-violet-100 transition hover:bg-violet-500/20"
+        title="Encaixar o mapa inteiro na tela"
+      >
+        encaixar
+      </button>
+      <span className="mx-0.5 h-5 w-px bg-violet-500/25" />
+      <button
+        onClick={aoAlternarCheia}
+        className="flex h-8 w-8 items-center justify-center rounded-lg text-violet-100 transition hover:bg-violet-500/20"
+        title={cheia ? "Sair da tela cheia (Esc)" : "Tela cheia"}
+      >
+        {cheia ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+      </button>
     </div>
   );
 }

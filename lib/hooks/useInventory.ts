@@ -20,6 +20,9 @@ export function useInventory(inicial: InventoryItem[]) {
   const aplicar = useCallback(
     async (
       otimista: (atual: InventoryItem[]) => InventoryItem[],
+      // O supabase.rpc devolve um construtor de consulta, nao uma
+      // promessa. Por isso cada chamada abaixo e um async com await:
+      // e o await que transforma uma coisa na outra.
       chamada: () => Promise<{ error: { message: string } | null }>
     ) => {
       const anterior = itens;
@@ -42,7 +45,7 @@ export function useInventory(inicial: InventoryItem[]) {
           .filter((i) => !i.is_equipped && i.grid_position !== null && i.id !== ignorar)
           .map((i) => i.grid_position)
       );
-      for (let i = 0; i < 25; i++) if (!ocupadas.has(i)) return i;
+      for (let i = 0; i < 36; i++) if (!ocupadas.has(i)) return i;
       return null;
     },
     [itens]
@@ -61,7 +64,7 @@ export function useInventory(inicial: InventoryItem[]) {
             return i;
           });
         },
-        () => supabase.rpc("equipar_item", { p_item: itemId, p_slot: slot })
+        async () => await supabase.rpc("equipar_item", { p_item: itemId, p_slot: slot })
       ),
     [aplicar, primeiraLivre, supabase]
   );
@@ -73,7 +76,7 @@ export function useInventory(inicial: InventoryItem[]) {
           atual.map((i) =>
             i.id === itemId ? { ...i, is_equipped: false, grid_position: pos } : i
           ),
-        () => supabase.rpc("desequipar_item", { p_item: itemId, p_pos: pos })
+        async () => await supabase.rpc("desequipar_item", { p_item: itemId, p_pos: pos })
       ),
     [aplicar, supabase]
   );
@@ -93,10 +96,23 @@ export function useInventory(inicial: InventoryItem[]) {
             return i;
           });
         },
-        () => supabase.rpc("mover_item", { p_item: itemId, p_pos: pos })
+        async () => await supabase.rpc("mover_item", { p_item: itemId, p_pos: pos })
       ),
     [aplicar, supabase]
   );
 
-  return { itens, erro, equipar, desequipar, mover, limparErro: () => setErro(null) };
+  /** Troca um item pela versão nova, depois de um UP ou transmutação. */
+  const substituir = useCallback((novo: InventoryItem) => {
+    setItens((atual) => atual.map((i) => (i.id === novo.id ? { ...i, ...novo } : i)));
+  }, []);
+
+  return {
+    itens,
+    erro,
+    equipar,
+    desequipar,
+    mover,
+    substituir,
+    limparErro: () => setErro(null),
+  };
 }
