@@ -81,6 +81,21 @@ export default function PainelPersonagem({
   const arquivoRef = useRef<HTMLInputElement>(null);
   const supabase = criarClienteNavegador();
 
+  /**
+   * Grava um valor absoluto.
+   *
+   * A funcao do banco trabalha com passos (mais 1, menos 1) porque foi
+   * feita para o combate. Aqui a gente calcula o passo que leva do
+   * valor atual ao digitado, e manda de uma vez. Assim ninguem precisa
+   * clicar vinte vezes para encher a vida.
+   */
+  async function definir(campo: string, novo: number) {
+    const atual = (p[campo as keyof typeof p] as number) ?? 0;
+    const delta = novo - atual;
+    if (delta === 0) return;
+    await ajustar(campo, delta);
+  }
+
   async function ajustar(campo: string, delta: number) {
     if (!podeEditar) return;
     const anterior = p;
@@ -201,27 +216,65 @@ export default function PainelPersonagem({
             <div key={campo}>
               <div className="mb-1 flex items-center justify-between text-[11px]">
                 <span className="text-violet-200/70">{nome}</span>
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-1">
                   {podeEditar && (
-                    <button
-                      onClick={() => ajustar(campo, -1)}
-                      className="rounded p-0.5 text-violet-300/50 hover:bg-violet-500/20 hover:text-violet-100"
-                      aria-label={`Tirar 1 de ${nome}`}
-                    >
-                      <Minus className="h-3 w-3" />
-                    </button>
+                    <>
+                      <button
+                        onClick={() => ajustar(campo, -10)}
+                        className="rounded px-1 text-[10px] text-violet-300/40 hover:bg-violet-500/20 hover:text-violet-100"
+                        aria-label={`Tirar 10 de ${nome}`}
+                      >
+                        −10
+                      </button>
+                      <button
+                        onClick={() => ajustar(campo, -1)}
+                        className="rounded p-0.5 text-violet-300/50 hover:bg-violet-500/20 hover:text-violet-100"
+                        aria-label={`Tirar 1 de ${nome}`}
+                      >
+                        <Minus className="h-3 w-3" />
+                      </button>
+                    </>
                   )}
-                  <span className="tabular-nums text-violet-100">
-                    {atual}/{teto}
-                  </span>
+
+                  {podeEditar ? (
+                    <input
+                      type="number"
+                      value={atual}
+                      onChange={(e) => definir(campo, Number(e.target.value))}
+                      onFocus={(e) => e.target.select()}
+                      className="w-10 rounded bg-black/40 text-center tabular-nums text-violet-100 focus:bg-black/60 focus:outline-none"
+                      aria-label={`${nome} atual`}
+                    />
+                  ) : (
+                    <span className="tabular-nums text-violet-100">{atual}</span>
+                  )}
+
+                  <span className="tabular-nums text-violet-300/50">/{teto}</span>
+
                   {podeEditar && (
-                    <button
-                      onClick={() => ajustar(campo, 1)}
-                      className="rounded p-0.5 text-violet-300/50 hover:bg-violet-500/20 hover:text-violet-100"
-                      aria-label={`Somar 1 de ${nome}`}
-                    >
-                      <Plus className="h-3 w-3" />
-                    </button>
+                    <>
+                      <button
+                        onClick={() => ajustar(campo, 1)}
+                        className="rounded p-0.5 text-violet-300/50 hover:bg-violet-500/20 hover:text-violet-100"
+                        aria-label={`Somar 1 de ${nome}`}
+                      >
+                        <Plus className="h-3 w-3" />
+                      </button>
+                      <button
+                        onClick={() => ajustar(campo, 10)}
+                        className="rounded px-1 text-[10px] text-violet-300/40 hover:bg-violet-500/20 hover:text-violet-100"
+                        aria-label={`Somar 10 de ${nome}`}
+                      >
+                        +10
+                      </button>
+                      <button
+                        onClick={() => definir(campo, teto)}
+                        title="Encher"
+                        className="rounded px-1 text-[10px] text-emerald-400/60 hover:bg-emerald-500/20 hover:text-emerald-300"
+                      >
+                        max
+                      </button>
+                    </>
                   )}
                 </div>
               </div>

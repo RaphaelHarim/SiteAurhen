@@ -117,6 +117,8 @@ export default function FichaEditavel({
               max_pv: campos.max_pv,
               current_pv: campos.current_pv,
               armor_class: campos.armor_class,
+              initiative: campos.initiative,
+              magic_res: campos.magic_res,
               speed: campos.speed,
               idiomas: campos.idiomas,
               str: campos.str,
@@ -217,7 +219,13 @@ export default function FichaEditavel({
       </div>
 
       {/* combate */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
+        <Numero
+          rotulo="HP atual"
+          valor={p.current_pv}
+          editavel={editavel}
+          aoMudar={(v) => agendarSalvar({ current_pv: v })}
+        />
         <Numero rotulo="HP máximo" valor={p.max_pv} editavel={editavel} aoMudar={(v) => agendarSalvar({ max_pv: v })} />
         <Numero
           rotulo="AC"
@@ -233,12 +241,31 @@ export default function FichaEditavel({
           editavel={editavel}
           aoMudar={(v) => agendarSalvar({ speed: v })}
         />
-        <div className="rounded-xl border border-violet-500/20 bg-[#120F1D]/70 p-3">
-          <p className="text-[10px] uppercase tracking-wider text-violet-300/60">Iniciativa</p>
-          <p className="cinzel text-xl text-violet-50">
-            {formatarBonus(mod(valorAtributo("agi")) + (bonus.initiative ?? 0))}
-          </p>
-        </div>
+        <label className="block rounded-xl border border-violet-500/20 bg-[#120F1D]/70 p-3">
+          <span className="mb-0.5 block text-[10px] uppercase tracking-wider text-violet-300/60">
+            Iniciativa
+          </span>
+          {editavel ? (
+            <input
+              type="number"
+              value={p.initiative}
+              onChange={(e) => agendarSalvar({ initiative: Number(e.target.value) })}
+              className="w-full bg-transparent font-[Cinzel,serif] text-xl text-violet-50 focus:outline-none"
+            />
+          ) : (
+            <span className="cinzel block text-xl text-violet-50">
+              {formatarBonus(p.initiative)}
+            </span>
+          )}
+          <span className="text-[10px] text-violet-300/40">
+            Destreza dá {formatarBonus(mod(valorAtributo("agi")))}
+            {(bonus.initiative ?? 0) !== 0 && (
+              <span className="ml-1 text-emerald-400">
+                {formatarBonus(bonus.initiative ?? 0)} do equipamento
+              </span>
+            )}
+          </span>
+        </label>
       </div>
 
       {/* atributos e salvaguardas */}
